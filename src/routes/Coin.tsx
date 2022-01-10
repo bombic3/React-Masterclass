@@ -1,23 +1,15 @@
-// import {useParams} from "react-router-dom";
-import {useEffect} from "react";
-import {useState} from "react";
-import {useParams} from "react-router";
-import {useLocation} from "react-router-dom";
+import { useEffect, useState } from "react";
+import {
+  Switch,
+  Route,
+  useLocation,
+  useParams,
+  useRouteMatch,
+} from "react-router-dom";
+import { Link } from "react-router-dom";
 import styled from "styled-components";
-
-const Container = styled.div`
-  padding: 0px 20px;
-  max-width: 480px;
-  margin: 0 auto;
-`;
-
-const Header = styled.header`
-  height: 10vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
-
+import Chart from "./Chart";
+import Price from "./Price";
 
 const Title = styled.h1`
   font-size: 48px;
@@ -29,25 +21,69 @@ const Loader = styled.span`
   display: block;
 `;
 
+const Container = styled.div`
+  padding: 0px 20px;
+  max-width: 480px;
+  margin: 0 auto;
+`;
+
+const Header = styled.header`
+  height: 15vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const Overview = styled.div`
+  display: flex;
+  justify-content: space-between;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 10px 20px;
+  border-radius: 10px;
+`;
+const OverviewItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  span:first-child {
+    font-size: 10px;
+    font-weight: 400;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+`;
+const Description = styled.p`
+  margin: 20px 0px;
+`;
+
+const Tabs = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  margin: 25px 0px;
+  gap: 10px;
+`;
+
+const Tab = styled.span<{ isActive: boolean }>`
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 400;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 7px 0px;
+  border-radius: 10px;
+  color: ${(props) =>
+    props.isActive ? props.theme.accentColor : props.theme.textColor};
+  a {
+    display: block;
+  }
+`;
 
 interface RouteParams {
   coinId: string;
 }
-
 interface RouteState {
   name: string;
 }
-
-// interface IInfoData {  interface인 걸 알기 위해 I를 붙임(케바케)
-
-// 실행윈도우 콘솔창에
-// Object.keys(temp1);
-// Object.keys(temp1).join();
-// temp1 InfoData 복붙
-// cmd + d 로 , 만 지우기
-// shift+option+화살표 로 : ; 써주기
-// 실행윈도우 콘솔창 Object.values(temp1).map(v => typeof v).join()
-// temp1 InfoData 복붙, cmd + d 로 , 만 지우기, 정리
 interface InfoData {
   id: string;
   name: string;
@@ -56,9 +92,6 @@ interface InfoData {
   is_new: boolean;
   is_active: boolean;
   type: string;
-  // object가 아닌 object로 이뤄진 배열임. array 의 interface만들어서 타입 다 써줘야 함(지금은 필요없으니 지움)
-  // tags: Itag[];
-  // team: object;
   description: string;
   message: string;
   open_source: boolean;
@@ -68,15 +101,9 @@ interface InfoData {
   proof_type: string;
   org_structure: string;
   hash_algorithm: string;
-  // links: object;
-  // links_extended: object;
-  // whitepaper: object;
   first_data_at: string;
   last_data_at: string;
 }
-
-
-
 interface PriceData {
   id: string;
   name: string;
@@ -107,52 +134,88 @@ interface PriceData {
       price: number;
       volume_24h: number;
       volume_24h_change_24h: number;
-    }
+    };
   };
 }
 
-function Coin () {
+function Coin() {
   const [loading, setLoading] = useState(true);
-  const {coinId} = useParams<RouteParams>();
-  const {state} = useLocation<RouteState>();
-  // console.log(state.name);
-  // console.log(params);
+  const { coinId } = useParams<RouteParams>();
+  const { state } = useLocation<RouteState>();
   const [info, setInfo] = useState<InfoData>();
   const [priceInfo, setPriceInfo] = useState<PriceData>();
+  const priceMatch = useRouteMatch("/:coinId/price");
+  const chartMatch = useRouteMatch("/:coinId/chart");
   useEffect(() => {
     (async () => {
-      // const response = await fetch(`https://api.coinpaprika.com/v1/coins/${ coinId }`)
-      // const json = await response.json()
-      // 두 줄 캡슐화 (한 줄의 solution이 두개의 변수를 받음)
-      const inforData = await (
-        await fetch(`https://api.coinpaprika.com/v1/coins/${ coinId }`)
+      const infoData = await (
+        await fetch(`https://api.coinpaprika.com/v1/coins/${coinId}`)
       ).json();
-      /*
-      data 저장
-      콘솔에 data 띄우고 오른쪽마우스 => Store object as global variable
-      그럼 temp1에 data 들어감. 필요할 때 temp1에 연결해주면 됨
-      */
-      // console.log(inforData);
-      // awaite ()괄호안에 request를 써주고 .json
       const priceData = await (
         await fetch(`https://api.coinpaprika.com/v1/tickers/${coinId}`)
       ).json();
-      // console.log(priceData);
-      setInfo(inforData);
+      setInfo(infoData);
       setPriceInfo(priceData);
       setLoading(false);
-      // API로부터 데이터를 request한 후에 setLoading false로 바꿔주기
     })();
   }, [coinId]);
   return (
     <Container>
       <Header>
-        <Title>{state?.name || "Loading"}</Title>
-        {/* home에서 가는 경우(state가 있음), 바로 detail로 가는 경우(state없어서 name undefined)  */}
+        <Title>
+          {state?.name ? state.name : loading ? "Loading..." : info?.name}
+        </Title>
       </Header>
-      {loading ? <Loader>Loading...</Loader> : null }
+      {loading ? (
+        <Loader>Loading...</Loader>
+      ) : (
+        <>
+          <Overview>
+            <OverviewItem>
+              <span>Rank:</span>
+              <span>{info?.rank}</span>
+            </OverviewItem>
+            <OverviewItem>
+              <span>Symbol:</span>
+              <span>${info?.symbol}</span>
+            </OverviewItem>
+            <OverviewItem>
+              <span>Open Source:</span>
+              <span>{info?.open_source ? "Yes" : "No"}</span>
+            </OverviewItem>
+          </Overview>
+          <Description>{info?.description}</Description>
+          <Overview>
+            <OverviewItem>
+              <span>Total Suply:</span>
+              <span>{priceInfo?.total_supply}</span>
+            </OverviewItem>
+            <OverviewItem>
+              <span>Max Supply:</span>
+              <span>{priceInfo?.max_supply}</span>
+            </OverviewItem>
+          </Overview>
+
+          <Tabs>
+            <Tab isActive={chartMatch !== null}>
+              <Link to={`/${coinId}/chart`}>Chart</Link>
+            </Tab>
+            <Tab isActive={priceMatch !== null}>
+              <Link to={`/${coinId}/price`}>Price</Link>
+            </Tab>
+          </Tabs>
+
+          <Switch>
+            <Route path={`/:coinId/price`}>
+              <Price />
+            </Route>
+            <Route path={`/:coinId/chart`}>
+              <Chart />
+            </Route>
+          </Switch>
+        </>
+      )}
     </Container>
   );
 }
-
 export default Coin;
