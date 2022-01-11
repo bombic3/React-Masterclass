@@ -1,5 +1,8 @@
 import {createGlobalStyle} from "styled-components";
 import Router from "./Router.tsx/Router";
+import {ReactQueryDevtools} from 'react-query/devtools';
+// React query는 render할 수 있는 component인 Devtools를 갖고 있음. 
+// React query에 있는 devtools를 import 해오면 나의 캐시에 있는 query를 볼 수 있음
 
 // https://cssdeck.com/blog/scripts/eric-meyer-reset-css/
 const GlobalStyle = createGlobalStyle`
@@ -68,6 +71,7 @@ function App() {
     <>
       <GlobalStyle />
       <Router />
+      <ReactQueryDevtools initialIsOpen={true} />
     </>
   );
 }

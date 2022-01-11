@@ -1,9 +1,11 @@
 import {useEffect} from "react";
 import {useState} from "react";
+import {useQuery} from "react-query";
 import {Link} from "react-router-dom";
 import styled from "styled-components";
 import {props} from "../../../../Library/Caches/typescript/4.3/node_modules/@types/bluebird";
 import {container} from "../../../../Library/Caches/typescript/4.3/node_modules/webpack/types";
+import {fetchCoins} from "../api";
 
 const Container = styled.div`
   padding: 0px 20px;
@@ -87,7 +89,7 @@ const coins = [
 ];
 */
 
-interface CoinInterface {
+interface ICoin {
   id: string,
   name: string,
   symbol: string,
@@ -98,28 +100,22 @@ interface CoinInterface {
 }
 
 function Coins () {
-  const [coins, setCoins] = useState<CoinInterface[]>([]);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    (async () => {
-      const response = await fetch("https://api.coinpaprika.com/v1/coins");
-      const json = await response.json();
-      // console.log(json);
-      setCoins(json.slice(0, 100));
-      setLoading(false);
-    })();
-  }, [])
-  console.log(coins);
+  // 한번 돌린 데이터는 API에 접근하고 캐시에 데이터 저장. 그 뒤로는 접근안함. loading안 뜸
+  // React query 는 이 response를 캐싱(caching)하고 있어서 React query는 API로부터 response를 받고 있어서
+  // 우리가 화면을 바꿨다가 돌아오더라도 React query는 우리가 원하는 data가 이미 캐시(cache)에 있다는 걸 알고 있음
+  // 그래서 React query는 API에 접근하지 않음(React query를 사용하는 이유)
+  const { isLoading, data } = useQuery<ICoin[]>("allCoins", fetchCoins)
+  
   return (
     <Container>
       <Header>
         <Title>코인</Title>
       </Header>
-      {loading ? (
+      {isLoading ? (
         <Loader>Loading...</Loader>
       ) : (
         <CoinsList>
-          {coins.map((coin) => (
+          {data?.slice(0, 100).map((coin) => (
             <Coin key={coin.id}>
               {/* <Link to={`/${ coin.id }`}> */}
               {/* 비하인드더씬 데이터 보내기(아무것도 안 보이지만 사실 다른 화면으로 state를 보내고 있음) */}
