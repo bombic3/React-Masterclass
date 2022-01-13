@@ -6,6 +6,7 @@ import styled from "styled-components";
 import {props} from "../../../../Library/Caches/typescript/4.3/node_modules/@types/bluebird";
 import {container} from "../../../../Library/Caches/typescript/4.3/node_modules/webpack/types";
 import {fetchCoins} from "../api";
+import { Helmet } from "react-helmet";
 
 const Container = styled.div`
   padding: 0px 20px;
@@ -108,6 +109,10 @@ function Coins () {
   
   return (
     <Container>
+      <Helmet>
+      {/* Helmet 안에 있는 게 문서의 head로 가는 것 */}
+        <title>코인</title>
+      </Helmet>
       <Header>
         <Title>코인</Title>
       </Header>
